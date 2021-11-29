@@ -9,7 +9,7 @@ void get_tiles(char[],char[]);
 int	 playing(int DIMENSION, char[DIMENSION][DIMENSION], int p_count, char [p_count][7],int*,char[]);
 void swap_single_tile(char[],char[]);
 void swap_all_tiles(char[],char[]);
-int contains(int,char[],char);
+int instance_of(int,char[],char);
 void place_word(int DIMENSION, char[DIMENSION][DIMENSION],char[]);
 
 int main (int argc, char* argv[]){
@@ -119,6 +119,7 @@ int main (int argc, char* argv[]){
 	int ctr = 1;
 	while (l)
 		l = playing(DIMENSION,board,p_count,player_tiles,&ctr,tile_set);
+	fclose(dictptr);
 	return 0;
 }
 
@@ -163,14 +164,22 @@ int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char pl
 	return 1;
 }
 
-//change this to return instance of
-int contains(int size, char arr[size], char c){
+//c
+int instance_of(int size, char arr[size], char c){
 	int sum = 0;
 	for (int i = 0; i< size; i++){
 		if (arr[i] == c)
 			sum++;
 	}
 	return sum;
+}
+
+int index_of(int size, char arr[size], char c){
+	for (int i = 0; i<size; i++){
+		if (arr[i] == c)
+			return i;
+	}
+	return -1;
 }
 
 void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set[7]){
@@ -180,13 +189,13 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 		scanf("%d",&num_let);
 	}
 	char word[num_let];
-	
+	for (int i = 0; i< num_let; i++){ // need to re-initialize each time cuz garbage
+		word[i] = 0;
+	}
 	int counts[7];
 	for (int i = 0; i <7; i++){
-		counts[i] = contains(7,player_set,player_set[i]);
+		counts[i] = instance_of(7,player_set,player_set[i]);
 	}
-	
-	
 	// Get the word from user, letter by letter & error check
 	char t = -1;
 	int bool,bool2;
@@ -196,17 +205,24 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 		while (!bool | bool2){
 			printf("Enter letter: %d\n", i+1);
 			scanf(" %c", &t);
-			bool = contains(7,player_set,t);
-			bool2 = contains(num_let,word,t);
+			bool = instance_of(7,player_set,t);	
+			bool2 = instance_of(num_let,word,t);
+		
 			if (!bool)
 				printf("The letter you entered is not in your tile set. Try again\n");
-			if (bool2 == 1)
+			if (bool2 && counts[index_of(7,player_set,t)] > 1){
+				counts[index_of(7,player_set,t)] = counts[index_of(7,player_set,t)] - 1;
+				bool2 = 0;
+			}else if (bool2)
 				printf("You already entered this/these letter(s). Try again\n");
-			else if (bool2)
-				
 		}	
 		word[i] = t;		// add char to word 
+		for (int i = 0; i<num_let; i++){
+			printf("%c",word[i]);
+		}
+		printf("\n");
 	}
+	// Now need to actually place the word (or try to)
 	
 	
 }
@@ -259,13 +275,6 @@ void swap_all_tiles(char tile_set[100], char player_set[7]){
 	printf("\n");
 	
 }
-
-/* swap elements in memory, gives a weird error... not needed for now anyways
-void swap(char* a, char* b){
-	char temp = *a;
-	*a = *b
-	*b = temp;
-}*/
 
 int prompt(int ctr,char player_set[7]){
 	printf("Player %d, it's your turn! Here are your current tiles:\n",ctr);
