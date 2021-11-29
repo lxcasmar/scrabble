@@ -159,6 +159,18 @@ int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char pl
 	return 1;
 }
 
+int contains(char player_set[7], char c){
+	for (int i = 0; i< 7; i++){
+		if (player_set[i] == c)
+			return 1;
+	}
+	return 0;
+}
+
+void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char* w){
+	
+}
+
 void get_tiles(char tile_set[100],char player_set[7]){
 	for (int i =0; i<7;i++){
 		int j = rand() % (100);
