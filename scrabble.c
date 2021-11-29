@@ -163,12 +163,14 @@ int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char pl
 	return 1;
 }
 
+//change this to return instance of
 int contains(int size, char arr[size], char c){
+	int sum = 0;
 	for (int i = 0; i< size; i++){
 		if (arr[i] == c)
-			return 1;
+			sum++;
 	}
-	return 0;
+	return sum;
 }
 
 void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set[7]){
@@ -179,13 +181,18 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 	}
 	char word[num_let];
 	
-	// Get the word from user, letter by letter
+	int counts[7];
+	for (int i = 0; i <7; i++){
+		counts[i] = contains(7,player_set,player_set[i]);
+	}
+	
+	
+	// Get the word from user, letter by letter & error check
 	char t = -1;
 	int bool,bool2;
 	for (int i = 0; i< num_let; i++){
-		bool = 0;
+		bool = 0;	// force the loop
 		bool2 = 1;
-		// check if letter entered is in the player's tile set
 		while (!bool | bool2){
 			printf("Enter letter: %d\n", i+1);
 			scanf(" %c", &t);
@@ -193,11 +200,15 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 			bool2 = contains(num_let,word,t);
 			if (!bool)
 				printf("The letter you entered is not in your tile set. Try again\n");
-			if (bool2)
-				printf("You already entered this letter. Try again\n");
+			if (bool2 == 1)
+				printf("You already entered this/these letter(s). Try again\n");
+			else if (bool2)
+				
 		}	
 		word[i] = t;		// add char to word 
 	}
+	
+	
 }
 
 void get_tiles(char tile_set[100],char player_set[7]){
