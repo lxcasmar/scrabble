@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 
 void display_board(int DIMENSION, char[DIMENSION][DIMENSION]);
 int	 prompt(int, char[]);
@@ -26,6 +25,7 @@ int main (int argc, char* argv[]){
 		printf("Enter number of players [2-4]\n");
 		scanf("%d",&p_count);
 	}
+
 	char tile_set[100];
 	// populate tile set array for the game. ^ is for blank tiles... 
 		// * is for 'missing' tiles in tileset (players have them)
@@ -86,6 +86,8 @@ int main (int argc, char* argv[]){
 				tile_set[i] = '^';
 	}
 	
+
+	
 	/*srand(time(NULL));		// randomize the tile-set... maybe not needed
 	for (int i = 99; i > 0; i--){
 		int j = rand() % (i+1);
@@ -135,7 +137,7 @@ void display_board(int DIMENSION,char board[DIMENSION][DIMENSION]){
 }
 
 int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char player_tiles[p_count][7],int* ctr,char tile_set[100]){
-	printf("\e[1;1H\e[2J");	//regex to clear console
+	//printf("\e[1;1H\e[2J");	//regex to clear console
 	display_board(DIMENSION,board);
 	int res = prompt(*ctr,player_tiles[*ctr]);
 	// do smth w prompt
@@ -145,22 +147,23 @@ int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char pl
 		swap_single_tile(tile_set,player_tiles[*ctr]);
 	if (res == 4)
 		swap_all_tiles(tile_set,player_tiles[*ctr]);
-	// increment turn counter	
-	(*ctr)++;
-	if (*ctr>p_count)	// reset turn counter
-		*ctr = 1;
-	printf("Player %d\'s turn is over... enter \'C\' to continue\n",*ctr -1);
+	
+	printf("Player %d\'s turn is over... enter \'C\' to continue\n",*ctr);
 	// will really work with any character except ENTER
 	char cont = -1;
 	scanf(" %c",&cont);
+	// increment turn counter	
+	*ctr = (*ctr)+1;
+	if (*ctr>p_count)	// reset turn counter
+		*ctr = 1;
 	return 1;
 }
 
 void get_tiles(char tile_set[100],char player_set[7]){
 	for (int i =0; i<7;i++){
-		int j = rand() % (101);
+		int j = rand() % (100);
 		while (tile_set[j] == '*'){ // this will be bad near end of game... fix later
-			j = rand() % (101);
+			j = rand() % (100);
 		}
 		//printf(" %c\n", tile_set[j]);
 		player_set[i] = tile_set[j];
@@ -170,33 +173,39 @@ void get_tiles(char tile_set[100],char player_set[7]){
 
 void swap_single_tile(char tile_set[100],char player_set[7]){
 	int ans = -1;
+
+	
 	while (!(ans > 0 && ans <8)){
 		printf("Which tile would you like to swap? Enter 1-7\n");
 		scanf("%d",&ans);
 	}
 		// will need to check j here to see if not always getting same seed
-	int j = rand() % 101;
+	int j = rand() % 100;
 	while (tile_set[j] == '*'){
-		j = rand() % 101;
+		j = rand() % 100;
 	}
 	char temp = player_set[ans-1];
 	player_set[ans-1] = tile_set[j];
 	printf("Swapped %c for %c\n",temp,tile_set[j]);
 	tile_set[j] = temp;
 	
+
 }
 
 void swap_all_tiles(char tile_set[100], char player_set[7]){
+	
 	printf("Your new tiles are:\n");
 	for (int i = 0; i<7;i++){
-		int j = rand() % 101;
+		int j = rand() % 100;
 		while (tile_set[j] == '*')
-			j = rand()%101;
+			j = rand()%100;
 		char temp = player_set[i];
 		player_set[i] = tile_set[j];
 		tile_set[j] = temp;
 		printf(" %c",player_set[i]);
 	}
+	printf("\n");
+	
 }
 
 /* swap elements in memory, gives a weird error... not needed for now anyways
