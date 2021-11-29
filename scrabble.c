@@ -9,6 +9,8 @@ void get_tiles(char[],char[]);
 int	 playing(int DIMENSION, char[DIMENSION][DIMENSION], int p_count, char [p_count][7],int*,char[]);
 void swap_single_tile(char[],char[]);
 void swap_all_tiles(char[],char[]);
+int contains(int,char[],char);
+void place_word(int DIMENSION, char[DIMENSION][DIMENSION],char[]);
 
 int main (int argc, char* argv[]){
 	FILE* dictptr = fopen("Dictionary.txt","r");
@@ -140,9 +142,11 @@ int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char pl
 	//printf("\e[1;1H\e[2J");	//regex to clear console
 	display_board(DIMENSION,board);
 	int res = prompt(*ctr,player_tiles[*ctr]);
-	// do smth w prompt
+	
 	if (res == 0)		// user wants to quit game
 		return 0;
+	if (res == 2)
+		place_word(DIMENSION,board,player_tiles[*ctr]);
 	if (res == 3)
 		swap_single_tile(tile_set,player_tiles[*ctr]);
 	if (res == 4)
@@ -159,16 +163,41 @@ int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char pl
 	return 1;
 }
 
-int contains(char player_set[7], char c){
-	for (int i = 0; i< 7; i++){
-		if (player_set[i] == c)
+int contains(int size, char arr[size], char c){
+	for (int i = 0; i< size; i++){
+		if (arr[i] == c)
 			return 1;
 	}
 	return 0;
 }
 
-void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char* w){
+void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set[7]){
+	int num_let = 0;
+	while (!(num_let>0 && num_let<8)){
+		printf("How many letters are in your word?\n");
+		scanf("%d",&num_let);
+	}
+	char word[num_let];
 	
+	// Get the word from user, letter by letter
+	char t = -1;
+	int bool,bool2;
+	for (int i = 0; i< num_let; i++){
+		bool = 0;
+		bool2 = 1;
+		// check if letter entered is in the player's tile set
+		while (!bool | bool2){
+			printf("Enter letter: %d\n", i+1);
+			scanf(" %c", &t);
+			bool = contains(7,player_set,t);
+			bool2 = contains(num_let,word,t);
+			if (!bool)
+				printf("The letter you entered is not in your tile set. Try again\n");
+			if (bool2)
+				printf("You already entered this letter. Try again\n");
+		}	
+		word[i] = t;		// add char to word 
+	}
 }
 
 void get_tiles(char tile_set[100],char player_set[7]){
