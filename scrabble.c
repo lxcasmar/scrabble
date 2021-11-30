@@ -88,25 +88,12 @@ int main (int argc, char* argv[]){
 				tile_set[i] = '^';
 	}
 	
-
-	
-	/*srand(time(NULL));		// randomize the tile-set... maybe not needed
-	for (int i = 99; i > 0; i--){
-		int j = rand() % (i+1);
-		swap(&tile_set[i], &tile_set[j]);
-	}*/
 	// each row is a player's 7 tiles
 	char player_tiles[p_count][7];
 	srand(time(NULL));
 	for (int i = 1; i<=p_count;i++){
 		get_tiles(tile_set,player_tiles[i]);
 	}
-	
-	/*	test print the tiles users have
-	for (int i = 0; i< 7; i++){
-		printf(" %c\t %c\n",player_tiles[1][i], player_tiles[2][i]);
-	}*/
-	
 	
 	char board[DIMENSION][DIMENSION];
 	// initialize board
@@ -125,17 +112,22 @@ int main (int argc, char* argv[]){
 
 // just saying this would be nicer with macros/global vars
 void display_board(int DIMENSION,char board[DIMENSION][DIMENSION]){
-	printf("Current state of the board\n");
+	printf("Current state of the board:\n");
+	for (int i = 0; i <DIMENSION; i++){
+		printf("\e[4(;4)m    \e[0(;0)m");
+	}
+	printf("\e[4(;4)m \e[0(;0)m\n");
 	for (int i = 0; i< DIMENSION; i++){
 		for (int j = 0; j < DIMENSION; j++){
-			printf("|");
+			printf("\e[4(;4)m| \e[0(;0)m");
 			if (board[i][j] == 0){
-				printf("_");
+				printf("\e[4(;4)m  \e[0(;0)m");
 			}else{
-				printf(" %c",board[i][j]);
+				printf("\e[4(;4)m%c \e[0(;0)m",board[i][j]);
+				//printf("%c",board[i][j]);
 			}
 		}
-		printf("|\n");
+		printf("\e[4(;4)m|\e[0(;0)m\n");
 	}
 }
 
@@ -153,7 +145,7 @@ int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char pl
 	if (res == 4)
 		swap_all_tiles(tile_set,player_tiles[*ctr]);
 	
-	printf("Player %d\'s turn is over... enter \'C\' to continue\n",*ctr);
+	printf("Player %d\'s turn is over... enter any character to continue\n",*ctr);
 	// will really work with any character except ENTER
 	char cont = -1;
 	scanf(" %c",&cont);
@@ -217,14 +209,45 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 				printf("You already entered this/these letter(s). Try again\n");
 		}	
 		word[i] = t;		// add char to word 
-		for (int i = 0; i<num_let; i++){
+		/*for (int i = 0; i<num_let; i++){	// test print word
 			printf("%c",word[i]);
 		}
-		printf("\n");
+		printf("\n");*/
 	}
 	// Now need to actually place the word (or try to)
+	int x = -1, y = -1,dir=0;
 	
+	printf("%c will be the reference character.\n",word[0]);
+	while ( !(x>0 && x<=DIMENSION)){
+		printf("Enter desired X coordinate of the reference tile [1-15]\n");
+		scanf("%d",&x);
+	}
+	while ( !(y>0 && y <= DIMENSION)){
+		printf("Enter desired Y coordinate of the reference tile [1-15]\n");
+		scanf("%d",&y);
+	}
+	// still need to check whether there is already a character in cur location
+	printf("Which direction will the word be placed in?\n");
+	while ( !(dir>0 && dir <=4)){
+		printf("Enter [1-4]\n\t1. North->South\n\t2. South->North\n\t3. East->West\n\t4. West->East\n");
+		scanf("%d",&dir);
+	}
 	
+	if (dir == 1){
+		for (int i =0;i<num_let;i++)
+			board[y+i-1][x-1] = word[i];
+	}else if (dir == 2){
+		for (int i =0;i<num_let;i++)
+			board[y-i+i][x-1] = word[i];
+	}else if (dir == 3){
+		for (int i =0;i<num_let;i++)
+			board[y-1][x+i-1] = word[i];
+	}else{
+		for (int i =0;i<num_let;i++)
+			board[y-1][x-i-1] = word[i];
+	}
+	
+	//replace user tiles.
 }
 
 void get_tiles(char tile_set[100],char player_set[7]){
