@@ -277,14 +277,32 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 	}else if (dir == 2){
 		for (int i =0;i<num_let;i++){
 			board[y-i+i][x-1] = word[i];
+			int j = rand() % 100;
+			while (tile_set[j] == '*')
+				j = rand() % 100;
+			player_set[i] = tile_set[j];
+			tile_set[j] = '*';
+			printf("Replaced %c with %c\n",word[i],player_set[i]);
 		}
 	}else if (dir == 3){
 		for (int i =0;i<num_let;i++){
 			board[y-1][x+i-1] = word[i];
+			int j = rand() % 100;
+			while (tile_set[j] == '*')
+				j = rand() % 100;
+			player_set[i] = tile_set[j];
+			tile_set[j] = '*';
+			printf("Replaced %c with %c\n",word[i],player_set[i]);
 		}
 	}else{
 		for (int i =0;i<num_let;i++){
 			board[y-1][x-i-1] = word[i];
+			int j = rand() % 100;
+			while (tile_set[j] == '*')
+				j = rand() % 100;
+			player_set[i] = tile_set[j];
+			tile_set[j] = '*';
+			printf("Replaced %c with %c\n",word[i],player_set[i]);
 		}
 	}
 }
