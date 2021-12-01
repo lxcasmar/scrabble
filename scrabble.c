@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-void display_board(int DIMENSION, char[DIMENSION][DIMENSION]);
+void display_board(int DIMENSION, char[DIMENSION][DIMENSION],int*);
 int	 prompt(int, char[]);
 void swap(char*,char*);
 void get_tiles(char[],char[]);
@@ -10,7 +10,7 @@ int	 playing(int DIMENSION, char[DIMENSION][DIMENSION], int p_count, char [p_cou
 void swap_single_tile(char[],char[]);
 void swap_all_tiles(char[],char[]);
 int instance_of(int,char[],char);
-void place_word(int DIMENSION, char[DIMENSION][DIMENSION],char[]);
+void place_word(int DIMENSION, char[DIMENSION][DIMENSION],char[],char[]);
 
 int main (int argc, char* argv[]){
 	FILE* dictptr = fopen("Dictionary.txt","r");
@@ -111,35 +111,65 @@ int main (int argc, char* argv[]){
 }
 
 // just saying this would be nicer with macros/global vars
-void display_board(int DIMENSION,char board[DIMENSION][DIMENSION]){
+void display_board(int DIMENSION,char board[DIMENSION][DIMENSION],int* ctr){
 	printf("Current state of the board:\n");
-	for (int i = 0; i <DIMENSION; i++){
+	for (int i = 0; i <DIMENSION; i++){	// first line stuff
 		printf("\e[4(;4)m    \e[0(;0)m");
 	}
 	printf("\e[4(;4)m \e[0(;0)m\n");
+	//printf("\n");
 	for (int i = 0; i< DIMENSION; i++){
+		if (i != 0 && i % 15 == 0)
+			printf("\e[4(;4)m|\e[0(;0)m");
+		if (i != DIMENSION ){						// top spacing
+			for (int k =0; k<=DIMENSION; k++){
+				printf("|   ");
+			}
+		}
+		printf("\n");
 		for (int j = 0; j < DIMENSION; j++){
-			printf("\e[4(;4)m| \e[0(;0)m");
+			//printf("\e[4(;4)m|  \e[0(;0)m");
+			printf("| "); 
 			if (board[i][j] == 0){
-				printf("\e[4(;4)m  \e[0(;0)m");
-			}else{
-				printf("\e[4(;4)m%c \e[0(;0)m",board[i][j]);
+				//printf("\e[4(;4)m \e[0(;0)m");
+				printf("  ");
+			}else if (*ctr == 1){
+				printf("\e[36m%c\e[0(;0)m ",board[i][j]);
 				//printf("%c",board[i][j]);
+			}else if (*ctr == 2){
+				printf("\e[34m%c\e[0(;0)m ",board[i][j]);
+			}else if (*ctr == 3){
+				printf("\e[33m%c\e[0(;0)m ",board[i][j]);
+			}else{
+				printf("\e[31m%c\e[0(;0)m ",board[i][j]);
 			}
 		}
 		printf("\e[4(;4)m|\e[0(;0)m\n");
+		
+		//if (i != DIMENSION - 1){
+			for (int k =0; k<DIMENSION; k++){	
+				//printf("|   ");
+				printf("\e[4(;4)m|   \e[0(;0)m");
+			}
+			//printf("\n");
+			//for (int k = 0; k <= DIMENSION; k++){
+			//	printf("|   ");
+			//}
+		//}
+		printf("\e[4(;4)m|\e[0(;0)m\n");
+		
 	}
 }
 
 int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char player_tiles[p_count][7],int* ctr,char tile_set[100]){
 	//printf("\e[1;1H\e[2J");	//regex to clear console
-	display_board(DIMENSION,board);
+	display_board(DIMENSION,board,ctr);
 	int res = prompt(*ctr,player_tiles[*ctr]);
 	
 	if (res == 0)		// user wants to quit game
 		return 0;
 	if (res == 2)
-		place_word(DIMENSION,board,player_tiles[*ctr]);
+		place_word(DIMENSION,board,player_tiles[*ctr],tile_set);
 	if (res == 3)
 		swap_single_tile(tile_set,player_tiles[*ctr]);
 	if (res == 4)
@@ -174,7 +204,7 @@ int index_of(int size, char arr[size], char c){
 	return -1;
 }
 
-void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set[7]){
+void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set[7],char tile_set[100]){
 	int num_let = 0;
 	while (!(num_let>0 && num_let<8)){
 		printf("How many letters are in your word?\n");
@@ -233,21 +263,30 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 		scanf("%d",&dir);
 	}
 	
+	// place word in direction specified by user. Then replace the tile
 	if (dir == 1){
-		for (int i =0;i<num_let;i++)
+		for (int i =0;i<num_let;i++){
 			board[y+i-1][x-1] = word[i];
+			int j = rand() % 100;
+			while (tile_set[j] == '*')
+				j = rand() % 100;
+			player_set[i] = tile_set[j];
+			tile_set[j] = '*';
+			printf("Replaced %c with %c\n",word[i],player_set[i]);
+		}
 	}else if (dir == 2){
-		for (int i =0;i<num_let;i++)
+		for (int i =0;i<num_let;i++){
 			board[y-i+i][x-1] = word[i];
+		}
 	}else if (dir == 3){
-		for (int i =0;i<num_let;i++)
+		for (int i =0;i<num_let;i++){
 			board[y-1][x+i-1] = word[i];
+		}
 	}else{
-		for (int i =0;i<num_let;i++)
+		for (int i =0;i<num_let;i++){
 			board[y-1][x-i-1] = word[i];
+		}
 	}
-	
-	//replace user tiles.
 }
 
 void get_tiles(char tile_set[100],char player_set[7]){
