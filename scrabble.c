@@ -11,6 +11,7 @@ void swap_single_tile(char[],char[]);
 void swap_all_tiles(char[],char[]);
 int instance_of(int,char[],char);
 void place_word(int DIMENSION, char[DIMENSION][DIMENSION],char[],char[]);
+void  display_board_w(int DIMENSION,char board[DIMENSION][DIMENSION],int* ctr);
 
 int main (int argc, char* argv[]){
 	FILE* dictptr = fopen("Dictionary.txt","r");
@@ -161,9 +162,30 @@ void display_board(int DIMENSION,char board[DIMENSION][DIMENSION],int* ctr){
 	}
 }
 
+void  display_board_w(int DIMENSION,char board[DIMENSION][DIMENSION],int* ctr){
+	printf("Current state of the board:\n");
+	for (int i = 0; i<DIMENSION;i++)
+		printf(" ___");
+	printf("\n");
+	for (int i = 0; i<DIMENSION;i++){
+		printf("|");
+		for (int j = 0; j<DIMENSION;j++){
+			if (board[i][j] == 0)
+				printf("   |");
+			else
+				printf(" %c |",board[i][j]);
+		}
+		printf("\n|");
+		for (int k = 0; k<DIMENSION; k++)
+			printf("___|");
+		printf("\n");
+	}
+			
+}
+
 int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char player_tiles[p_count][7],int* ctr,char tile_set[100]){
 	//printf("\e[1;1H\e[2J");	//regex to clear console
-	display_board(DIMENSION,board,ctr);
+	display_board_w(DIMENSION,board,ctr);
 	int res = prompt(*ctr,player_tiles[*ctr]);
 	
 	if (res == 0)		// user wants to quit game
