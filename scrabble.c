@@ -1,17 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 void display_board(int DIMENSION, char[DIMENSION][DIMENSION],int*);
 int	 prompt(int, char[]);
 void swap(char*,char*);
 void get_tiles(char[],char[]);
-int	 playing(int DIMENSION, char[DIMENSION][DIMENSION], int p_count, char [p_count][7],int*,char[]);
+int	 playing(int DIMENSION, char[DIMENSION][DIMENSION], int p_count, char [p_count][7],int*,char[],FILE*);
 void swap_single_tile(char[],char[]);
 void swap_all_tiles(char[],char[]);
 int instance_of(int,char[],char);
-void place_word(int DIMENSION, char[DIMENSION][DIMENSION],char[],char[]);
+void place_word(int DIMENSION, char[DIMENSION][DIMENSION],char[],char[],FILE*);
 void  display_board_w(int DIMENSION,char board[DIMENSION][DIMENSION],int* ctr);
+int check_word_in_dict(char*,FILE*,int);
 
 int main (int argc, char* argv[]){
 	FILE* dictptr = fopen("Dictionary.txt","r");
@@ -106,7 +108,7 @@ int main (int argc, char* argv[]){
 	int l = 1;
 	int ctr = 1;
 	while (l)
-		l = playing(DIMENSION,board,p_count,player_tiles,&ctr,tile_set);
+		l = playing(DIMENSION,board,p_count,player_tiles,&ctr,tile_set,dictptr);
 	fclose(dictptr);
 	return 0;
 }
@@ -183,7 +185,7 @@ void  display_board_w(int DIMENSION,char board[DIMENSION][DIMENSION],int* ctr){
 			
 }
 
-int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char player_tiles[p_count][7],int* ctr,char tile_set[100]){
+int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char player_tiles[p_count][7],int* ctr,char tile_set[100],FILE* dictptr){
 	//printf("\e[1;1H\e[2J");	//regex to clear console
 	display_board_w(DIMENSION,board,ctr);
 	int res = prompt(*ctr,player_tiles[*ctr]);
@@ -191,7 +193,7 @@ int playing(int DIMENSION, char board[DIMENSION][DIMENSION],int p_count, char pl
 	if (res == 0)		// user wants to quit game
 		return 0;
 	if (res == 2)
-		place_word(DIMENSION,board,player_tiles[*ctr],tile_set);
+		place_word(DIMENSION,board,player_tiles[*ctr],tile_set,dictptr);
 	if (res == 3)
 		swap_single_tile(tile_set,player_tiles[*ctr]);
 	if (res == 4)
@@ -226,7 +228,8 @@ int index_of(int size, char arr[size], char c){
 	return -1;
 }
 
-void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set[7],char tile_set[100]){
+void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set[7],char tile_set[100],FILE* dictptr){
+	begin: ;
 	int num_let = 0;
 	while (!(num_let>0 && num_let<8)){
 		printf("How many letters are in your word?\n");
@@ -242,8 +245,10 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 	}
 	// Get the word from user, letter by letter & error check
 	char t = -1;
-	int bool,bool2;
-	for (int i = 0; i< num_let; i++){
+	int bool,bool2,single_letter = 0;
+	int i;
+	for (i = 0; i< num_let; i++){
+		loop_start: ;
 		bool = 0;	// force the loop
 		bool2 = 1;
 		while (!bool | bool2){
@@ -265,10 +270,38 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 			printf("%c",word[i]);
 		}
 		printf("\n");*/
+		if (single_letter)
+			goto skip;
 	}
-	// Now need to actually place the word (or try to)
-	int x = -1, y = -1,dir=0;
+	skip: ;
+	word[num_let] = '\0';		// care with this
+	int in_dict = check_word_in_dict(word,dictptr,num_let);
+	if (!in_dict){
+		printf("Word \"%s\" is not in dictionary\n",word);
+		int ot = 0;
+		while (!(ot>0 && ot<4)){
+			printf("Would you like to:\n\t1.Replace entire word?\n\t2.Replace a letter?\n\t3.Skip Turn?\n");
+			scanf("%d",&ot);
+		}
+		if (ot == 1)
+			goto begin;
+		else if (ot == 2){
+			i = -1; 
+			while (!(i>=0 && i < num_let)){
+				printf("Enter letter number to replace [1-%d]\n",num_let);
+				scanf("%d",&i);
+				i--;
+			}
+			single_letter = 1;
+			goto loop_start;
+		}
+		else if (ot == 3){
+			goto end;
+		}
+	}
 	
+	// Now need to actually place the word (or try to)
+	int x = -1, y = -1,dir=0;	
 	printf("%c will be the reference character.\n",word[0]);
 	while ( !(x>0 && x<=DIMENSION)){
 		printf("Enter desired X coordinate of the reference tile [1-15]\n");
@@ -298,7 +331,7 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 		}
 	}else if (dir == 2){
 		for (int i =0;i<num_let;i++){
-			board[y-i+i][x-1] = word[i];
+			board[y-i-1][x-1] = word[i];
 			int j = rand() % 100;
 			while (tile_set[j] == '*')
 				j = rand() % 100;
@@ -327,6 +360,21 @@ void place_word(int DIMENSION, char board[DIMENSION][DIMENSION], char player_set
 			printf("Replaced %c with %c\n",word[i],player_set[i]);
 		}
 	}
+	end: ;
+}
+
+int check_word_in_dict(char* word, FILE* dictptr,int num_let){
+	char temp [16] = "                ";
+	word[num_let] = '\0';
+	//printf("%s\n",word);
+	for (int status = fscanf(dictptr,"%s",temp); status != EOF; status = fscanf(dictptr,"%s",temp)){
+		//printf("%s\t%d\n",temp,strcmp(temp,word)); // check compareTo
+		//if (strncmp(temp,word,num_let) == 0)
+		if (strcmp(temp,word) == 0)
+			return 1;
+		
+	}
+	return 0;
 }
 
 void get_tiles(char tile_set[100],char player_set[7]){
